@@ -1,0 +1,19 @@
+{
+    "versions": [
+        {
+            "name": "a1.0.0",
+            "file": "v1/main.py",
+            "description": "Первая версия игры(не в состоянии работать)"
+        },
+        {
+            "name": "a1.0.1",
+            "file": "downloads/a1.0.1/mainst.py",
+            "description": "Стабильная версия"
+        },
+        {
+            "name": "a1.0.2",
+            "file": "downloads/a1.0.2/game.pyz",
+            "description": "Формат главного файла игры заменен в .pyz(В разработке отсуствуют текстуры)"
+        }
+    ]
+}

@@ -1,0 +1,94 @@
+import os
+import json
+import subprocess
+import urllib.request
+import tkinter as tk
+from tkinter import messagebox, simpledialog
+
+# Путь к файлу с версиями
+VERSIONS_FILE = "versions.json"
+
+# Папка для скачиваемых версий
+DOWNLOADS_DIR = "downloads"
+
+# Загрузка списка версий
+def load_versions():
+    if not os.path.exists(VERSIONS_FILE):
+        messagebox.showerror("Ошибка", "Файл версий не найден!")
+        return []
+    with open(VERSIONS_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data.get("versions", [])
+
+# Запуск выбранной версии
+def launch_version(version):
+    file_path = version["file"]
+    if not os.path.exists(file_path):
+        messagebox.showerror("Ошибка", f"Файл {file_path} не найден!")
+        return
+    print(f"Запуск версии {version['name']}...")
+    subprocess.Popen(["python", file_path])
+    root.quit()  # Закрыть лаунчер после запуска игры
+
+# Скачивание новой версии
+def download_version(version_url):
+    version_name = version_url.split("/")[-1]
+    target_dir = os.path.join(DOWNLOADS_DIR, version_name.replace(".zip", ""))
+    target_path = os.path.join(DOWNLOADS_DIR, version_name)
+
+    if not os.path.exists(DOWNLOADS_DIR):
+        os.makedirs(DOWNLOADS_DIR)
+
+    try:
+        print(f"Скачивание версии {version_name}...")
+        urllib.request.urlretrieve(version_url, target_path)
+        print("Скачивание завершено!")
+
+        # Распаковка архива (если это .zip)
+        if version_name.endswith(".zip"):
+            import zipfile
+            with zipfile.ZipFile(target_path, 'r') as zip_ref:
+                zip_ref.extractall(target_dir)
+            os.remove(target_path)  # Удалить архив после распаковки
+            print(f"Распаковка в {target_dir}...")
+
+        messagebox.showinfo("Успех", f"Версия {version_name} успешно скачана!")
+    except Exception as e:
+        messagebox.showerror("Ошибка", f"Ошибка при скачивании: {e}")
+
+# Интерфейс лаунчера
+def create_launcher():
+    global root
+    root = tk.Tk()
+    root.title("Pycraft Launcher")
+    root.geometry("400x300")
+
+    # Загрузка версий
+    versions = load_versions()
+    if not versions:
+        messagebox.showwarning("Предупреждение", "Нет доступных версий!")
+        return
+
+    # Отображение списка версий
+    tk.Label(root, text="Доступные версии:", font=("Arial", 14)).pack(pady=10)
+    for version in versions:
+        btn = tk.Button(
+            root,
+            text=f"{version['name']} - {version['description']}",
+            command=lambda v=version: launch_version(v),
+            width=50
+        )
+        btn.pack(pady=5)
+
+    # Кнопка для скачивания новой версии
+    def on_download():
+        version_url = simpledialog.askstring("Скачать версию", "Введите URL для скачивания:")
+        if version_url:
+            download_version(version_url)
+
+    tk.Button(root, text="Скачать новую версию", command=on_download).pack(pady=20)
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    create_launcher()
